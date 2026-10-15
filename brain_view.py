@@ -237,7 +237,7 @@ class BrainView(QWidget):
         self.model_combo.setEditable(True)
         items = [
             str(DEFAULT_LOCAL_MODEL),
-            "llama-8b-q4 (recommended \u00B7 4.7 GB)",
+            "llama3.1:8b (recommended \u00B7 4.7 GB)",
             "qwen-7b-q4 (4.5 GB)",
             "phi-4-mini (2.4 GB)",
         ]

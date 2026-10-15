@@ -14,7 +14,7 @@ helpful string the UI can display.
 import json
 import urllib.request
 
-DEFAULT_LOCAL_MODEL = "llama-8b-q4"
+DEFAULT_LOCAL_MODEL = "llama3.1:8b"
 OLLAMA_HOST = "http://localhost:11434"
 
 
