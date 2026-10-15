@@ -10,7 +10,16 @@ in the EXE(...) block below.
 """
 
 # Import this so the frozen exe carries the same display name as the source.
-from app_name import APP_NAME  # noqa: F401
+# (SPECPATH is injected by PyInstaller when it executes this spec file;
+# without it, the spec's own folder isn't on sys.path.)
+import os
+import sys
+
+try:
+    sys.path.insert(0, SPECPATH)
+    from app_name import APP_NAME  # noqa: F401
+except Exception:
+    APP_NAME = "Vicky Talk"  # fallback: keep in sync with app_name.py
 
 
 def _sounddevice_datas():
