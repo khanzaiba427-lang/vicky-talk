@@ -174,6 +174,10 @@ class BrainView(QWidget):
         self.tone_combo.addItems(["Friendly & warm", "Professional", "Funny"])
         self.tone_combo.currentIndexChanged.connect(lambda _i: self._changed())
         sb.addWidget(self._labeled("TONE", self.tone_combo))
+        self.language_combo = QComboBox()
+        self.language_combo.addItems(["Roman Urdu", "English", "Urdu (اردو)"])
+        self.language_combo.currentIndexChanged.connect(lambda _i: self._changed())
+        sb.addWidget(self._labeled("LANGUAGE", self.language_combo))
         grid.addWidget(soul_box, 1, 0)
 
         # safety box
@@ -323,6 +327,7 @@ class BrainView(QWidget):
         s.setValue("brain/voice", self.voice_combo.currentText())
         s.setValue("soul/name", self.name_edit.text())
         s.setValue("soul/tone", self.tone_combo.currentText())
+        s.setValue("soul/language", self.language_combo.currentText())
         s.setValue("safety/level", self.safety_combo.currentText())
         s.sync()
 
@@ -344,6 +349,8 @@ class BrainView(QWidget):
         tone = s.value("soul/tone", "")
         if tone:
             self.tone_combo.setCurrentText(tone)
+        language = s.value("soul/language", "Roman Urdu")
+        self.language_combo.setCurrentText(language)
         safety = s.value("safety/level", "")
         if safety:
             self.safety_combo.setCurrentText(safety)
@@ -360,5 +367,6 @@ class BrainView(QWidget):
             "voice": self.voice_combo.currentText(),
             "assistant_name": self.name_edit.text().strip() or APP_NAME,
             "tone": self.tone_combo.currentText(),
+            "language": self.language_combo.currentText(),
             "safety": self.safety_combo.currentText(),
         }

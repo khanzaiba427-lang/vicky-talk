@@ -54,9 +54,19 @@ class _ChatWorker(QThread):
             )
             name = self._config.get("assistant_name", APP_NAME)
             tone = self._config.get("tone", "Friendly & warm")
+            language = self._config.get("language", "Roman Urdu")
+            lang_instruction = {
+                "English": "Always reply in English.",
+                "Urdu (اردو)": "Always reply in Urdu, using Urdu script.",
+            }.get(
+                language,
+                "Always reply in Roman Urdu (Urdu written in Latin script, "
+                "the way people text in Pakistan).",
+            )
             system = (
                 f"You are {name}, a helpful desktop AI assistant. "
-                f"Tone: {tone}. Keep answers concise and practical."
+                f"Tone: {tone}. {lang_instruction} "
+                f"Keep answers concise and practical."
             )
             reply = brain.chat([
                 {"role": "system", "content": system},

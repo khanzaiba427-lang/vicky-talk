@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Vicky Talk speech-to-text — offline voice input.
 
-Mic -> text via `sounddevice` (capture) + `faster-whisper` (tiny.en model,
-~75MB, lazy-downloaded once to ~/.vickytalk/models/). CPU-friendly (int8),
+Mic -> text via `sounddevice` (capture) + `faster-whisper` (tiny model,
+multilingual: English + Urdu, ~75MB, lazy-downloaded once to
+~/.vickytalk/models/). CPU-friendly (int8),
 no cloud APIs, no internet needed after the first model download.
 
 Import-safe: if the optional dependencies are missing, LISTEN_AVAILABLE is
@@ -12,7 +13,7 @@ never crashes because of this module.
 
 from pathlib import Path
 
-MODEL_NAME = "tiny.en"
+MODEL_NAME = "tiny"
 MODEL_DIR = Path.home() / ".vickytalk" / "models"
 DEFAULT_SECONDS = 6
 SAMPLE_RATE = 16000
