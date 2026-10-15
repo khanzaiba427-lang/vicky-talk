@@ -330,8 +330,9 @@ class MainWindow(QMainWindow):
             cc.user_input.setText(text)
             self._on_start_ai()
         else:
+            _fallback = 'did not catch that \u2014 try again'
             cc.append_line(
-                f"[\U0001F399\uFE0F] {text or 'did not catch that \u2014 try again'}")
+                f"[\U0001F399\uFE0F] {text or _fallback}")
             self.agent_view.log_line(f"[\U0001F399\uFE0F] listen failed: {text}")
 
     # --------------------------------------------------------------------- tts
