@@ -40,12 +40,12 @@ line and rebuild to rename the app everywhere (window title, dialogs, etc.).
 - `tts.py` — text-to-speech voice (pyttsx3)
 - `reminders.py` — background reminder service
 - `stt.py` — voice input (offline faster-whisper, needs `pip install faster-whisper sounddevice`)
-- `ui/orb.py` — voice orb widget
-- `ui/command_center.py` — command center view (chat + controls)
-- `ui/agent_view.py` — agent activity view
-- `ui/notes_view.py` — notes / objectives view
-- `ui/brain_view.py` — brain settings view (local / API mode)
-- `ui/setup_wizard.py` — first-run wizard (Ollama install + model download)
+- `orb.py` — voice orb widget
+- `command_center.py` — command center view (chat + controls)
+- `agent_view.py` — agent activity view
+- `notes_view.py` — notes / objectives view
+- `brain_view.py` — brain settings view (local / API mode)
+- `setup_wizard.py` — first-run wizard (Ollama install + model download)
 
 ## Notes
 

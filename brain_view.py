@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from app_name import APP_NAME
 from brain import Brain, DEFAULT_LOCAL_MODEL
 from theme import GOLD, refresh_dynamic_style
-from .setup_wizard import ollama_available
+from setup_wizard import ollama_available
 
 
 class _ModeCard(QFrame):

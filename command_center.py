@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from theme import GOLD, refresh_dynamic_style
-from .orb import OrbWidget
+from orb import OrbWidget
 
 # (key, display name, role, initials)
 AGENTS = [

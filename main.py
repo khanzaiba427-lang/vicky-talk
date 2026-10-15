@@ -14,12 +14,12 @@ from PySide6.QtWidgets import (
 
 from app_name import APP_NAME
 from theme import apply_theme, GOLD
-from ui.orb import OrbWidget  # noqa: F401 (re-exported for convenience)
-from ui.command_center import CommandCenterWidget
-from ui.agent_view import AgentView
-from ui.notes_view import NotesView
-from ui.brain_view import BrainView
-from ui.setup_wizard import SetupWizard, ollama_available
+from orb import OrbWidget  # noqa: F401 (re-exported for convenience)
+from command_center import CommandCenterWidget
+from agent_view import AgentView
+from notes_view import NotesView
+from brain_view import BrainView
+from setup_wizard import SetupWizard, ollama_available
 
 # ---- backend contract (sibling agent provides these modules) ----
 from brain import Brain, DEFAULT_LOCAL_MODEL  # noqa: F401
