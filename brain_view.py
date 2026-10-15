@@ -4,11 +4,14 @@ Settings persist to QSettings(APP_NAME, APP_NAME). current_config() returns the
 dict main.py uses to build a Brain.
 """
 
-from PySide6.QtCore import Qt, Signal, QThread, QSettings
+from PySide6.QtCore import Qt, Signal, QThread, QSettings, QProcess
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLabel,
     QPushButton, QLineEdit, QComboBox, QScrollArea,
 )
+
+import re as _re
+_PULL_PERCENT_RE = _re.compile(r"(\d{1,3})\s*%")
 
 from app_name import APP_NAME
 from brain import Brain, DEFAULT_LOCAL_MODEL
@@ -123,6 +126,17 @@ class BrainView(QWidget):
         self.ollama_status.setStyleSheet(f"color: {GOLD['dim']}; font-size: 12.5px;")
         lb.addWidget(self.ollama_status)
         lb.addWidget(self._labeled("MODEL", self._model_combo()))
+        dl_row = QHBoxLayout()
+        dl_row.setSpacing(10)
+        self._dl_button = QPushButton("DOWNLOAD MODEL")
+        self._dl_button.setProperty("gold", True)
+        self._dl_button.clicked.connect(self._start_model_pull)
+        dl_row.addWidget(self._dl_button)
+        self._dl_status = QLabel("")
+        self._dl_status.setStyleSheet(f"color: {GOLD['dim']}; font-size: 12px;")
+        self._dl_status.setWordWrap(True)
+        dl_row.addWidget(self._dl_status, 1)
+        lb.addLayout(dl_row)
         lb.addWidget(self._labeled("VOICE", self._voice_combo()))
         grid.addWidget(local_box, 0, 0)
 
@@ -287,6 +301,40 @@ class BrainView(QWidget):
         else:
             self.ollama_status.setText("\u25CB Ollama not detected \u2014 run Setup")
             self.ollama_status.setStyleSheet(f"color: {GOLD['amber']}; font-size: 12.5px;")
+
+    def _start_model_pull(self) -> None:
+        model = self.model_combo.currentText().strip().split()[0]
+        if not model:
+            return
+        proc = getattr(self, "_pull_proc", None)
+        if proc is not None and proc.state() != QProcess.ProcessState.NotRunning:
+            return  # already downloading
+        self._dl_button.setEnabled(False)
+        self._dl_status.setStyleSheet(f"color: {GOLD['dim']}; font-size: 12px;")
+        self._dl_status.setText(f"Downloading {model}\u2026")
+        self._pull_proc = QProcess(self)
+        # ollama streams its progress bar on stderr -> merge channels
+        self._pull_proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        self._pull_proc.readyReadStandardOutput.connect(self._on_pull_output)
+        self._pull_proc.finished.connect(self._on_pull_finished)
+        self._pull_proc.start("ollama", ["pull", model])
+
+    def _on_pull_output(self) -> None:
+        data = bytes(self._pull_proc.readAllStandardOutput()).decode("utf-8", errors="replace")
+        matches = _PULL_PERCENT_RE.findall(data)
+        if matches:
+            pct = max(0, min(100, int(matches[-1])))
+            model = self.model_combo.currentText().strip().split()[0]
+            self._dl_status.setText(f"Downloading {model}\u2026 {pct}%")
+
+    def _on_pull_finished(self, exit_code: int, _status) -> None:
+        self._dl_button.setEnabled(True)
+        if exit_code == 0:
+            self._dl_status.setText("\u2713 Model ready \u2014 ab baat karo!")
+            self._dl_status.setStyleSheet(f"color: {GOLD['green']}; font-size: 12px;")
+        else:
+            self._dl_status.setText("\u2717 Download failed \u2014 is Ollama running?")
+            self._dl_status.setStyleSheet(f"color: {GOLD['red']}; font-size: 12px;")
 
     def _test_connection(self) -> None:
         key = self.key_edit.text().strip()
