@@ -262,6 +262,7 @@ class BrainView(QWidget):
         items = [
             str(DEFAULT_LOCAL_MODEL),
             "llama3.1:8b (recommended \u00B7 4.7 GB)",
+            "llama3.2:3b (faster \u00B7 2 GB)",
             "qwen-7b-q4 (4.5 GB)",
             "phi-4-mini (2.4 GB)",
         ]
