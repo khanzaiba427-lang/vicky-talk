@@ -78,9 +78,10 @@ class Listener:
             return []
 
     # --------------------------------------------------------------- record
-    def record(self, seconds: int = DEFAULT_SECONDS):
-        """Capture mono 16kHz float32 audio from the default mic.
+    def record(self, seconds: int = DEFAULT_SECONDS, device=None):
+        """Capture mono 16kHz float32 audio from the mic.
 
+        device: None = system default, or a device name from list_mics().
         Returns (True, numpy array) or (False, error message). Never raises.
         """
         if not LISTEN_AVAILABLE:
@@ -98,11 +99,19 @@ class Listener:
             frames = int(SAMPLE_RATE * max(1, seconds))
             audio = _sd.rec(
                 frames, samplerate=SAMPLE_RATE, channels=1,
-                dtype="float32", blocking=True,
+                dtype="float32", blocking=True, device=device,
             )
             return True, _np.asarray(audio, dtype=_np.float32).reshape(-1)
         except Exception as exc:
-            return False, f"Microphone error: {exc}"
+            msg = str(exc)
+            if "device" in msg.lower() or "-1" in msg:
+                return False, (
+                    f"Microphone error: {msg}. Check: (1) a mic is plugged in, "
+                    f"(2) Windows Settings > Privacy & security > Microphone > "
+                    f"'Let desktop apps access your microphone' is ON, "
+                    f"(3) try picking your mic in Brain settings > MICROPHONE."
+                )
+            return False, f"Microphone error: {msg}"
 
     # ------------------------------------------------------------ transcribe
     def transcribe(self, audio):
@@ -124,12 +133,12 @@ class Listener:
             return False, f"Transcription failed: {exc}"
 
     # ---------------------------------------------------------------- listen
-    def listen(self, seconds: int = DEFAULT_SECONDS):
+    def listen(self, seconds: int = DEFAULT_SECONDS, device=None):
         """Record + transcribe in one call.
 
         Returns (True, text) or (False, error message). Never raises.
         """
-        ok, audio = self.record(seconds=seconds)
+        ok, audio = self.record(seconds=seconds, device=device)
         if not ok:
             return False, audio
         return self.transcribe(audio)

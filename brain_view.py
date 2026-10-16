@@ -148,6 +148,7 @@ class BrainView(QWidget):
         self._voice_status.setWordWrap(True)
         vt_row.addWidget(self._voice_status, 1)
         lb.addLayout(vt_row)
+        lb.addWidget(self._labeled("MICROPHONE", self._mic_combo()))
         grid.addWidget(local_box, 0, 0)
 
         # api box
@@ -275,6 +276,39 @@ class BrainView(QWidget):
         self.model_combo.currentIndexChanged.connect(lambda _i: self._changed())
         self.model_combo.editTextChanged.connect(lambda _t: self._changed())
         return self.model_combo
+
+    def _mic_combo(self) -> QWidget:
+        wrap = QWidget()
+        row = QHBoxLayout(wrap)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(10)
+        self.mic_combo = QComboBox()
+        self.mic_combo.currentIndexChanged.connect(lambda _i: self._changed())
+        row.addWidget(self.mic_combo, 1)
+        refresh = QPushButton("REFRESH")
+        refresh.clicked.connect(self._refresh_mics)
+        row.addWidget(refresh)
+        self._refresh_mics()
+        return wrap
+
+    def _refresh_mics(self) -> None:
+        try:
+            from stt import Listener
+            mics = Listener().list_mics()
+        except Exception:
+            mics = []
+        current = self.mic_combo.currentText()
+        self.mic_combo.blockSignals(True)
+        self.mic_combo.clear()
+        self.mic_combo.addItem("Default microphone")
+        for m in mics:
+            if m not in ("Default microphone",):
+                self.mic_combo.addItem(m)
+        if current:
+            idx = self.mic_combo.findText(current)
+            if idx >= 0:
+                self.mic_combo.setCurrentIndex(idx)
+        self.mic_combo.blockSignals(False)
 
     def _voice_combo(self) -> QComboBox:
         self.voice_combo = QComboBox()
@@ -407,6 +441,7 @@ class BrainView(QWidget):
         s.setValue("brain/base_url", self.baseurl_edit.text())
         # NOTE: the API key is deliberately NOT persisted to disk settings.
         s.setValue("brain/voice", self.voice_combo.currentText())
+        s.setValue("voice/mic", self.mic_combo.currentText())
         s.setValue("soul/name", self.name_edit.text())
         s.setValue("soul/tone", self.tone_combo.currentText())
         s.setValue("soul/language", self.language_combo.currentText())
@@ -427,6 +462,11 @@ class BrainView(QWidget):
         voice = s.value("brain/voice", "")
         if voice:
             self.voice_combo.setCurrentText(voice)
+        mic = s.value("voice/mic", "")
+        if mic:
+            idx = self.mic_combo.findText(mic)
+            if idx >= 0:
+                self.mic_combo.setCurrentIndex(idx)
         self.name_edit.setText(s.value("soul/name", APP_NAME))
         tone = s.value("soul/tone", "")
         if tone:
@@ -447,6 +487,8 @@ class BrainView(QWidget):
             "base_url": (self.baseurl_edit.text().strip()
                          if self.baseurl_wrap.isVisible() else "") or None,
             "voice": self.voice_combo.currentText(),
+            "mic": (None if self.mic_combo.currentText() == "Default microphone"
+                    else self.mic_combo.currentText()),
             "assistant_name": self.name_edit.text().strip() or APP_NAME,
             "tone": self.tone_combo.currentText(),
             "language": self.language_combo.currentText(),

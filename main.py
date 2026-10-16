@@ -115,13 +115,14 @@ class _ListenWorker(QThread):
 
     done = Signal(bool, str)  # ok, text-or-error
 
-    def __init__(self, seconds: int = 6):
+    def __init__(self, seconds: int = 6, device=None):
         super().__init__()
         self._seconds = seconds
+        self._device = device
 
     def run(self) -> None:  # noqa: N802
         try:
-            ok, text = Listener().listen(seconds=self._seconds)
+            ok, text = Listener().listen(seconds=self._seconds, device=self._device)
             self.done.emit(bool(ok), str(text))
         except Exception as exc:  # never crash the app from here
             self.done.emit(False, f"Voice input failed: {exc}")
@@ -346,7 +347,8 @@ class MainWindow(QMainWindow):
         cc.append_line("[\U0001F399\uFE0F] listening\u2026 speak now (6s)")
         self.agent_view.log_line("[\U0001F399\uFE0F] voice input started")
 
-        self._listen_worker = _ListenWorker(seconds=6)
+        self._listen_worker = _ListenWorker(
+            seconds=6, device=self.brain_view.current_config().get("mic"))
         self._listen_worker.done.connect(self._on_listen_done)
         self._listen_worker.start()
 
