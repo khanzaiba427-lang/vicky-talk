@@ -34,10 +34,11 @@ _NODE_TARGETS = {"memory": 2, "skills": 1, "soul": 3, "settings": 3}
 
 
 class _ChatWorker(QThread):
-    """Runs Brain.chat + Brain.decide_tool off the GUI thread."""
+    """Runs Brain.chat_stream + Brain.decide_tool off the GUI thread."""
 
     done = Signal(str, object, object)  # reply, tool_name|None, args dict
     failed = Signal(str)
+    partial = Signal(str)  # streamed reply chunks, emitted as they arrive
 
     def __init__(self, config: dict, user_text: str):
         super().__init__()
@@ -68,10 +69,14 @@ class _ChatWorker(QThread):
                 f"Tone: {tone}. {lang_instruction} "
                 f"Keep answers concise and practical."
             )
-            reply = brain.chat([
+            reply_parts = []
+            for chunk in brain.chat_stream([
                 {"role": "system", "content": system},
                 {"role": "user", "content": self._text},
-            ])
+            ]):
+                reply_parts.append(chunk)
+                self.partial.emit(chunk)
+            reply = "".join(reply_parts)
             tool_name, tool_args = None, {}
             try:
                 decided = brain.decide_tool(self._text)
@@ -266,15 +271,27 @@ class MainWindow(QMainWindow):
         self._chat_worker = _ChatWorker(self.brain_view.current_config(), text)
         self._chat_worker.done.connect(self._on_chat_done)
         self._chat_worker.failed.connect(self._on_chat_failed)
+        self._chat_worker.partial.connect(self._on_chat_partial)
         self._chat_worker.finished.connect(self._on_chat_finished)
+        self._streaming = False
         self._chat_worker.start()
+
+    def _on_chat_partial(self, chunk: str) -> None:
+        cc = self.command_center
+        if not self._streaming:
+            self._streaming = True
+            cc.stream_start(f"{self.brain_view.current_config()['assistant_name']}: ")
+        cc.stream_append(chunk)
 
     def _on_chat_finished(self) -> None:
         self._busy = False
 
     def _on_chat_done(self, reply: str, tool_name, tool_args) -> None:
         cc = self.command_center
-        cc.append_line(f"{self.brain_view.current_config()['assistant_name']}: {reply}")
+        if self._streaming:
+            cc.stream_end()
+        else:
+            cc.append_line(f"{self.brain_view.current_config()['assistant_name']}: {reply}")
         self.agent_view.log_line(f"[ok] reply ({len(reply)} chars)")
         cc.set_orb_state("speaking")
         self._speak(reply)
@@ -305,6 +322,9 @@ class MainWindow(QMainWindow):
                 cc.append_line(f"[tool] {tool_name} declined by user.")
 
     def _on_chat_failed(self, err: str) -> None:
+        if self._streaming:
+            self.command_center.stream_end()
+            self._streaming = False
         self.command_center.append_line(f"[\u2717] brain error: {err}")
         self.agent_view.log_line(f"[\u2717] brain error: {err}")
         self.command_center.set_orb_state("idle")

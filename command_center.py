@@ -3,7 +3,7 @@
 import math
 
 from PySide6.QtCore import Qt, QTimer, Signal, QPointF
-from PySide6.QtGui import QPainter, QPen, QColor, QRadialGradient, QFont
+from PySide6.QtGui import QPainter, QPen, QColor, QRadialGradient, QFont, QTextCursor
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QLabel,
     QPushButton, QLineEdit, QTextEdit, QButtonGroup,
@@ -363,6 +363,26 @@ class CommandCenterWidget(QWidget):
     def append_line(self, text: str) -> None:
         """Append a line to the live feed (auto-scrolls)."""
         self.feed.append(text)
+
+    def stream_start(self, label: str) -> None:
+        """Begin a streamed reply line in the live feed."""
+        self.feed.append(label)
+
+    def stream_append(self, text: str) -> None:
+        """Append streamed text to the current feed line (no newline)."""
+        cursor = self.feed.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        cursor.insertText(text)
+        self.feed.setTextCursor(cursor)
+        self.feed.ensureCursorVisible()
+
+    def stream_end(self) -> None:
+        """Finish the streamed reply line."""
+        cursor = self.feed.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        cursor.insertText("\n")
+        self.feed.setTextCursor(cursor)
+        self.feed.ensureCursorVisible()
 
     def set_brain_status(self, text: str) -> None:
         """Update the small brain-status label under START AI."""

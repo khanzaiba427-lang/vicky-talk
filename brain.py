@@ -59,6 +59,52 @@ class Brain:
                 "for brain settings." % exc
             )
 
+    def chat_stream(self, messages):
+        """Yield the assistant's reply in chunks as they arrive.
+
+        Local mode streams token-by-token via Ollama; API mode yields the
+        complete reply as a single chunk. Never raises — failures yield a
+        human-readable message chunk instead.
+        """
+        if self.mode == "api":
+            yield self._chat_api(messages)
+            return
+        try:
+            import ollama
+        except ImportError:
+            yield (
+                "The local brain needs the 'ollama' Python package. "
+                "Open the Setup wizard to install it and pull a model with "
+                "`ollama pull %s`." % DEFAULT_LOCAL_MODEL
+            )
+            return
+        try:
+            client = ollama.Client(host=OLLAMA_HOST)
+            stream = client.chat(
+                model=self.model or DEFAULT_LOCAL_MODEL,
+                messages=messages,
+                stream=True,
+            )
+            got_any = False
+            for chunk in stream:
+                content = chunk.get("message", {}).get("content", "")
+                if content:
+                    got_any = True
+                    yield content
+            if not got_any:
+                yield (
+                    "The local model returned an empty reply. Try restarting "
+                    "Ollama or pulling the model again: `ollama pull %s`."
+                    % (self.model or DEFAULT_LOCAL_MODEL)
+                )
+        except Exception as exc:
+            yield (
+                "Couldn't reach the local brain: %s. "
+                "Make sure Ollama is installed and running, and that the model "
+                "is pulled: `ollama pull %s`. You can walk through this in the "
+                "Setup wizard." % (exc, self.model or DEFAULT_LOCAL_MODEL)
+            )
+
     def _chat_local(self, messages):
         try:
             import ollama
