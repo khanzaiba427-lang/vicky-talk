@@ -52,6 +52,11 @@ a = Analysis(
         "requests",
         # pyttsx3 is imported lazily inside tts.py.
         "pyttsx3",
+        # pyttsx3's Windows (SAPI5) backend needs pywin32's COM modules.
+        "win32com",
+        "win32com.client",
+        "pythoncom",
+        "pywintypes",
         # plyer is optional in tools.py; pin the Windows notification backend
         # so the frozen build does not drop it.
         "plyer.platforms.win.notification",

@@ -5,3 +5,4 @@ pyttsx3>=2.90
 plyer>=2.1
 faster-whisper>=1.0
 sounddevice>=0.4
+pywin32>=306; sys_platform == "win32"
