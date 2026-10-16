@@ -57,6 +57,9 @@ a = Analysis(
         "win32com.client",
         "pythoncom",
         "pywintypes",
+        # pyttsx3 loads its drivers dynamically via importlib, so PyInstaller
+        # cannot see this statically — pin it explicitly.
+        "pyttsx3.drivers.sapi5",
         # plyer is optional in tools.py; pin the Windows notification backend
         # so the frozen build does not drop it.
         "plyer.platforms.win.notification",

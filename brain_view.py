@@ -138,6 +138,16 @@ class BrainView(QWidget):
         dl_row.addWidget(self._dl_status, 1)
         lb.addLayout(dl_row)
         lb.addWidget(self._labeled("VOICE", self._voice_combo()))
+        vt_row = QHBoxLayout()
+        vt_row.setSpacing(10)
+        self._test_voice_btn = QPushButton("TEST VOICE")
+        self._test_voice_btn.clicked.connect(self._test_voice)
+        vt_row.addWidget(self._test_voice_btn)
+        self._voice_status = QLabel("")
+        self._voice_status.setStyleSheet(f"color: {GOLD['dim']}; font-size: 12px;")
+        self._voice_status.setWordWrap(True)
+        vt_row.addWidget(self._voice_status, 1)
+        lb.addLayout(vt_row)
         grid.addWidget(local_box, 0, 0)
 
         # api box
@@ -335,6 +345,29 @@ class BrainView(QWidget):
         else:
             self._dl_status.setText("\u2717 Download failed \u2014 is Ollama running?")
             self._dl_status.setStyleSheet(f"color: {GOLD['red']}; font-size: 12px;")
+
+    def _test_voice(self) -> None:
+        """Speak a test phrase and report the real engine status."""
+        self._test_voice_btn.setEnabled(False)
+        self._voice_status.setStyleSheet(f"color: {GOLD['dim']}; font-size: 12px;")
+        self._voice_status.setText("Testing voice\u2026")
+        try:
+            from tts import Speaker
+            sp = Speaker()
+            ok, info = sp.diagnose()
+        except Exception as exc:
+            ok, info = False, {"error": "diagnostic crashed: %s" % exc}
+        if not ok:
+            self._voice_status.setText("\u2717 " + info.get("error", "unknown error"))
+            self._voice_status.setStyleSheet(f"color: {GOLD['red']}; font-size: 12px;")
+        else:
+            voices = info.get("voices", [])
+            self._voice_status.setText(
+                "\u2713 Engine OK (%d voices) \u2014 suno!" % len(voices)
+            )
+            self._voice_status.setStyleSheet(f"color: {GOLD['green']}; font-size: 12px;")
+            sp.speak("Salam! Main Vicky Talk hoon. Kya aap mujhe sun sakte hain?")
+        self._test_voice_btn.setEnabled(True)
 
     def _test_connection(self) -> None:
         key = self.key_edit.text().strip()
